@@ -6,30 +6,61 @@
 					label="New Todo"
 					outlined
 					v-model="toDo.title"
+					@keydown.enter="addToDo(toDo.title)"
 				></v-text-field>
 			</v-col>
 			<v-col cols="1">
-				<v-btn large color="primary" :disabled="isDisabled" @click="addToDo"
+				<v-btn
+					class="white--text"
+					large
+					color="deep-purple"
+					:disabled="isDisabled"
+					@click="addToDo(toDo.title)"
 					>Add</v-btn
 				>
 			</v-col>
 		</v-row>
-		<v-row class="d-flex justify-center pa-5 mx-auto">
-			<v-col cols="3">
+		<v-row class="d-flex justify-center">
+			<v-col cols="9" sm="8" md="3">
+				<v-card class="pa-3 text-center">
+					<v-list-item two-line>
+						<v-list-item-content>
+							<v-list-item-title class="headline">
+								Stats
+							</v-list-item-title>
+							<v-list-item-subtitle>
+								Fetched Todos showing:
+								<strong class="green--text">
+									{{ totalTodosShowing }}</strong
+								></v-list-item-subtitle
+							>
+							<v-list-item-subtitle>
+								Own Todos showing:
+								<strong class="green--text">
+									{{ totalOwnTodos }}</strong
+								></v-list-item-subtitle
+							>
+						</v-list-item-content>
+					</v-list-item>
+				</v-card>
+			</v-col>
+		</v-row>
+		<v-row class="d-flex justify-center pa-5 mx-auto" style="max-width:1000px">
+			<v-col cols="9" sm="8" md="3">
 				<v-select
 					v-model="select"
 					:items="toDoUserId"
-					:rules="[(v) => !!v || 'Item is required']"
 					label="Show Todos by User ID"
-					required
 					@change="filterResultsByUserId(select)"
 				></v-select>
 			</v-col>
-			<v-col cols="4">
+			<v-col cols="9" sm="8" md="3">
 				<v-checkbox
 					v-model="status"
 					:label="status ? 'Hide Completed' : 'Show Completed'"
-					color="primary"
+					class="white--text"
+					large
+					color="deep-purple"
 					:value="status != status"
 					@change="filterResultsByCompleted(status)"
 					hide-details
@@ -50,7 +81,7 @@
 				</v-system-bar>
 
 				<div v-if="!toDo.isEditing">
-					<v-card-title>
+					<v-card-title v-model="toDo.title">
 						{{ toDo.title }}
 					</v-card-title>
 				</div>
@@ -69,12 +100,20 @@
 					<v-checkbox
 						v-model="toDo.completed"
 						label="Completed"
-						color="primary"
+						class="white--text"
+						large
+						color="deep-purple"
 						:value="toDo.completed != toDo.completed"
 						hide-details
 					></v-checkbox>
 					<v-spacer></v-spacer>
-					<v-btn icon color="primary" @click="editToDo(toDo)">
+					<v-btn
+						icon
+						class="white--text"
+						large
+						color="deep-purple"
+						@click="editToDo(toDo)"
+					>
 						<v-icon>mdi-pencil</v-icon>
 					</v-btn>
 					<v-btn icon color="red" @click="deleteToDo(toDo.id)">
@@ -97,7 +136,7 @@
 				</v-system-bar>
 
 				<div v-if="!toDo.isEditing">
-					<v-card-title>
+					<v-card-title v-model="toDo.title">
 						{{ toDo.title }}
 					</v-card-title>
 				</div>
@@ -116,12 +155,20 @@
 					<v-checkbox
 						v-model="toDo.completed"
 						label="Completed"
-						color="primary"
+						class="white--text"
+						large
+						color="deep-purple"
 						:value="toDo.completed != toDo.completed"
 						hide-details
 					></v-checkbox>
 					<v-spacer></v-spacer>
-					<v-btn icon color="primary" @click="editToDo(toDo)">
+					<v-btn
+						icon
+						class="white--text"
+						large
+						color="deep-purple"
+						@click="editToDo(toDo)"
+					>
 						<v-icon>mdi-pencil</v-icon>
 					</v-btn>
 					<v-btn icon color="red" @click="deleteToDo(toDo.id)">
@@ -146,13 +193,19 @@
 			};
 		},
 		mounted() {
-			this.getToDos();
 			this.filterResultsByUserId(null);
 			this.filterResultsByCompleted(null);
+			this.getToDos();
 		},
 		computed: {
 			isDisabled() {
 				return this.toDo.title === undefined;
+			},
+			totalTodosShowing() {
+				return this.filteredToDos.length + this.toDos.length;
+			},
+			totalOwnTodos() {
+				return this.toDos.length;
 			},
 		},
 		methods: {
@@ -173,30 +226,34 @@
 						this.filteredToDos = results;
 					});
 			},
-			async addToDo() {
+			async addToDo(todoTitle) {
 				let uri = "https://jsonplaceholder.typicode.com/todos";
-				await fetch(uri, {
-					method: "POST",
-					body: JSON.stringify({
+				if (todoTitle) {
+					await fetch(uri, {
+						method: "POST",
+						body: JSON.stringify({
+							title: this.toDo.title,
+							id: Math.random() * 1,
+							completed: false,
+							userId: 1,
+							isEditing: false,
+						}),
+						headers: {
+							"Content-type": "application/json; charset=UTF-8",
+						},
+					});
+					this.toDos.unshift({
 						title: this.toDo.title,
 						id: Math.random() * 1,
 						completed: false,
 						userId: 1,
-					}),
-					headers: {
-						"Content-type": "application/json; charset=UTF-8",
-					},
-				});
-				this.toDos.unshift({
-					title: this.toDo.title,
-					id: Math.random() * 1,
-					completed: false,
-					userId: 1,
-				});
-				this.toDo = {};
+						isEditing: false,
+					});
+					this.toDo = {};
+				}
 			},
 			deleteToDo(id) {
-				fetch(`https://jsonplaceholder.typicode.com/posts/${id}`, {
+				fetch(`https://jsonplaceholder.typicode.com/todos/${id}`, {
 					method: "DELETE",
 				});
 				this.filteredToDos = this.filteredToDos.filter((toDo) => {
@@ -246,16 +303,28 @@
 						for (const id in data) {
 							results.push(data[id]);
 						}
-
+						this.select = null;
 						this.filteredToDos = results;
 					});
 			},
-			// editToDo(toDo) {
-			// 	toDo.isEditing = true;
-			// },
-			// updateToDo(toDo) {
-			// 	toDo.isEditing = false;
-			// },
+			editToDo(toDo) {
+				toDo.isEditing = true;
+				console.log(toDo, "Editing...");
+			},
+			updateToDo(toDo) {
+				toDo.isEditing = false;
+				console.log(toDo, "Not Editing...");
+
+				fetch(`https://jsonplaceholder.typicode.com/todos/${toDo.id}`, {
+					method: "PATCH",
+					body: JSON.stringify({
+						title: toDo.title,
+					}),
+					headers: {
+						"Content-type": "application/json; charset=UTF-8",
+					},
+				});
+			},
 		},
 	};
 </script>

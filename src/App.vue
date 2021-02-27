@@ -1,6 +1,6 @@
 <template>
 	<v-app>
-		<v-app-bar app color="primary" dark>
+		<v-app-bar app color="deep-purple" dark>
 			<div class="d-flex align-center">
 				<h2>ToDo App</h2>
 			</div>
